@@ -525,12 +525,7 @@ WeemoExtension.prototype.createWeemoCall = function(targetUser, targetFullname, 
       this.setDisplaynameToCall(this.rtcc.getDisplayName());
       this.setCallType("host");
       this.setCallOwner(true);
-      var options = {
-        location: "on the cloud",
-        startDate: Math.round(new Date().valueOf() / 1000) + 100,
-        stopDate: Math.round(new Date().valueOf() / 1000) + 200
-      };
-      this.meetingPoint = this.rtcc.createMeetingPoint('scheduled', options);
+      this.meetingPoint = this.rtcc.createMeetingPoint('adhoc');
     }
   }
 };
