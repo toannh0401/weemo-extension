@@ -299,6 +299,10 @@ WeemoExtension.prototype.initCall = function($uid, $name) {
       }
     });
 
+    this.rtcc.on('cloud.authenticate.success', function() {
+      weemoExtension.rtcc.setPluginMode('standalone');
+    });
+
     this.rtcc.on('client.disconnect', function() {
       if (weemoExtension.rtcc.getConnectionMode() === "plugin" || weemoExtension.rtcc.getConnectionMode() === "webrtc") {
         weemoExtension.isConnected = false;
