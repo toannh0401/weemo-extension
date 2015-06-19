@@ -45,10 +45,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Hashtable;
 
 
 public class VideoCallService {
   private static ExoCache<Serializable, VideoCallModel> videoProfileCache;
+  private static Hashtable<String, String> oneoneCache = new Hashtable<String, String>();
+
   public static String VIDEO_PROFILE_KEY = "videoCallsProfile" + CommonsUtils.getRepository().getConfiguration().getName();
   public static String BASE_PATH = "exo:applications";
   public static String VIDEOCALL_BASE_PATH = "VideoCallsProfile";
@@ -520,5 +523,25 @@ public class VideoCallService {
       }
     }
     return isTurnOff;
+  }
+
+  public static boolean callOneOne(String toUser, String meetingId) {
+    if (oneoneCache.contains(toUser)) {
+      return false;
+    } else {
+      oneoneCache.put(toUser, meetingId);
+      return true;
+    }
+  }
+
+  public static void finishCall(String toUser) {
+    oneoneCache.remove(toUser);
+  }
+
+  public static String getMeetingId(String toUser) {
+    if (!oneoneCache.containsKey(toUser)) {
+      return StringUtils.EMPTY;
+    }
+    return oneoneCache.get(toUser);
   }
 }

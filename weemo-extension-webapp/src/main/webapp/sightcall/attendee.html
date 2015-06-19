@@ -1,0 +1,185 @@
+<!-- This file is used by the caller, used name is attendee1_uid, and it calls the callee named calle_uid -->
+<!DOCTYPE html >
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title> My Rtcc Application: Attendee(Step One) </title>
+    <script type="text/javascript" src="http://download.rtccloud.net/js/webappid/wkatvb187bb7"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script type="text/javascript">
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable) {
+                return pair[1];
+            }
+        }
+        alert('Query Variable ' + variable + ' not found');
+    };
+    </script>
+</head>
+
+<body>
+    <script type="text/javascript">
+    if (window.location.protocol === 'file:') {
+        alert('your project must be served from a webserver and not from the file system');
+    }
+    // Here is the definition of the uid used by this user and the authentication url used in order to get a token
+    var UID_USER = 'attendee1_uid',
+        // If you are using our Java, Ruby or Node.js server-SDK uncomment the following line and replace the placeholder YOUR_AUTH_URL wuth your authentication client url
+        AUTH_URL = 'http://192.168.1.89:8080/rest/weemo/auth',
+
+        // If you are using our PHP server-SDK uncomment the following line and replace the placeholder YOUR_AUTH_URL wuth your authentication client url
+        // AUTH_URL = 'http://YOUR_AUTH_URL/gettoken.php?uid=',
+        realTimeClient = '',
+        rtcc = {},
+        meetingPoint,
+        // Define the optional parameters
+        options = {
+            debugLevel: 1,
+            displayName: 'Attendee1',
+            defaultStyle: true,
+            legacy: false,
+            mode_parameter: 'plugin_webrtc',
+            uiVersion: '1.4.4'
+        },
+        //Intialize Rtcc Function
+        initializeRtcc = function(token) {
+            // Initialize the Main Object with App Identifier, Token, RtccType, options
+            rtcc = new Rtcc('wkatvb187bb7', token, 'internal', options);
+            // Call if the RtccDriver is not running on the client computer and if the browser is not WebRTC-capable
+            rtcc.onRtccDriverNotStarted = function(downloadUrl) {
+                var answer = confirm('Click OK to download and install the Rtcc client.');
+                if (answer === true) {
+                    window.location = downloadUrl;
+                }
+            };
+            // Get the Connection Handler callback when the JavaScript is connected to the real-time client
+            rtcc.onConnectionHandler = function(message, code) {
+                if (window.console) {
+                    console.log('Connection Handler : ' + message + ' ' + code);
+                }
+                switch (message) {
+                    case 'connectedRtccDriver':
+                        realTimeClient = 'RtccDriver';
+                        break;
+                    case 'connectedWebRTC':
+                        realTimeClient = 'WebRTC';
+                        break;
+                    case 'sipOk':
+                        //document.getElementById('connection_status').innerHTML = 'Connection Status: Connected as attendee using ' + realTimeClient;
+                        //document.getElementById('join_meeting_point').style.display = 'block';
+                        join();
+                        break;
+                    case 'loggedasotheruser':
+                        // force connection, kick other logged users
+                        getToken(UID_USER, function(token) {
+                            rtcc.setToken(token);
+                            rtcc.authenticate(1);
+                        });
+                        break;
+                    case 'disconnectedRtccDriver':
+                        getToken(UID_USER, function(token) {
+                            rtcc.setToken(token);
+                        });
+                        break;
+                }
+            };
+
+
+            //Initialize connection between the real-time client and the browser
+            rtcc.initialize();
+        },
+        getToken = function(uid, callback) {
+            var xhr;
+            if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari
+                xhr = new XMLHttpRequest();
+            } else { // code for IE6, IE5
+                xhr = new ActiveXObject('Microsoft.XMLHTTP');
+            }
+            xhr.onreadystatechange = function() {
+                var response = xhr.responseText,
+                    responseJson,
+                    token;
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    response = xhr.responseText;
+                    try {
+                        responseJson = JSON.parse(response);
+
+                    } catch (e) {
+                        document.getElementById('error-content').innerHTML = e.message + '<br />' + e.stack + '<br />Response: ' + response;
+                        document.getElementById('error').style.display = 'block';
+                    }
+                    if (responseJson.error) {
+                        document.getElementById('error-content').innerHTML = 'error code:' + responseJson.error + '<br />Description:' + responseJson.error_description;
+                        document.getElementById('error').style.display = 'block';
+                    } else {
+                        token = responseJson.token;
+                        if (typeof callback === "function") {
+                            callback(token)
+                        } else {
+                            initializeRtcc(token);
+                        }
+                    }
+                } else if (xhr.readyState === 4 && xhr.status !== 200) {
+                    response = xhr.responseText;
+                    console.log(response);
+                    document.getElementById('error-content').innerHTML = response;
+                    document.getElementById('error').style.display = 'block';
+                }
+            };
+            xhr.open('GET', AUTH_URL, true);
+            xhr.send();
+        },
+        init = function() {
+            getToken(UID_USER);
+        },
+        /* ******************************************************************************** */
+        /*                                                                                  */
+        /*  join (Step 1):                                                                  */
+        /*  In the join function, the attendee joins the meeting point                      */
+        /*  whose id was set in the meeting_point_id field                                  */
+        /*  This function is called when the button "Join" is pushed                        */
+        /*                                                                                  */
+        /* ******************************************************************************** */
+
+        join = function() {
+            var id = getQueryVariable('meetingid')
+            rtcc.joinConfCall(id);
+
+        }
+        // Test if browser is IE10
+        // Poll for jQuery to come into existence
+
+
+
+    init();
+    </script>
+    <div class="container ">
+        <div class="starter - template ">
+            <h1>Welcome to Rtcc Multi-Party example (Step 1)</h1>
+            <h4 id="stat"></h4>
+            <div class="row well">
+                <div id="error" style="display: none;" class="bg-danger">
+                    <h4>An error occurred:</h4>
+                    <div id="error-content ">This is the error</div>
+                </div>
+                <div class="center-block " style="float:none;width:500px">
+                    <h4 id="connection_status">Connection Status: Connecting as Attendee...</h4>
+                </div>
+            </div>
+            <div class="row well" id="join_meeting_point" style="display: none;">
+                <div class="center-block " style="float:none;width:500px">
+                    <h4>  Enter the meeting point id (generated on the host side) and click join</h4>
+                    <input class="center-block " style="width:230px;" id="meeting_point_id" type="text " />
+                    <button class="center-block btn btn-primary btn-lg " onclick="join()">Join</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

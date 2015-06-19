@@ -1,0 +1,262 @@
+<!-- This file is used by the caller, used name is host_uid, and it calls the callee named calle_uid -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>My Rtcc Application: Host (Step One)</title>
+    <script type="text/javascript" src="http://download.rtccloud.net/js/webappid/wkatvb187bb7"></script>
+    <script type="text/javascript" src="/weemo-extension/js/jquery-1.8.3.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <script type="text/javascript">
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable) {
+                return pair[1];
+            }
+        }
+        alert('Query Variable ' + variable + ' not found');
+    };
+    </script>
+</head>
+
+<body>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        document.getElementById('callWho').innerHTML = "Calling " + getQueryVariable('uuid_to_call');
+    });
+
+    if (window.location.protocol === 'file:') {
+        alert('your project must be served from a webserver and not from the file system');
+    }
+    // Here is the definition of the uid used by this user and the authentication url used in order to get a token
+    var UID_USER = 'demo3',
+        // If you are using our Java, Ruby or Node.js server-SDK uncomment the following line and replace the placeholder YOUR_AUTH_URL wuth your authentication client url
+        AUTH_URL = 'http://192.168.1.89:8080/rest/weemo/auth',
+
+        // If you are using our PHP server-SDK uncomment the following line and replace the placeholder YOUR_AUTH_URL wuth your authentication client url
+        // AUTH_URL = 'http://YOUR_AUTH_URL/gettoken.php?uid=',
+        realTimeClient = '',
+        rtcc = {},
+        meetingPoint,
+        // Define the optional parameters
+        options = {
+            debugLevel: 1,
+            displayName: 'Host',
+            defaultStyle: true,
+            legacy: false,
+            mode_parameter: 'plugin_webrtc',
+            uiVersion: '1.4.4'
+        },
+        //Intialize Rtcc Function
+        initializeRtcc = function(token) {
+            // Initialize the Main Object with App Identifier, Token, RtccType, options
+            rtcc = new Rtcc('wkatvb187bb7', token, 'internal', options);
+            // Call if the RtccDriver is not running on the client computer and if the browser is not WebRTC-capable
+            rtcc.onRtccDriverNotStarted = function(downloadUrl) {
+                var answer = confirm('Click OK to download and install the Rtcc client.');
+                if (answer === true) {
+                    window.location = downloadUrl;
+                }
+            };
+            // Get the Connection Handler callback when the JavaScript is connected to the real-time client
+            rtcc.onConnectionHandler = function(message, code) {
+                if (window.console) {
+                    console.log('Connection Handler : ' + message + ' ' + code);
+                }
+                switch (message) {
+                    case 'connectedRtccDriver':
+                        realTimeClient = 'RtccDriver';
+                        break;
+                    case 'connectedWebRTC':
+                        realTimeClient = 'WebRTC';
+                        break;
+                    case 'sipOk':
+                        //document.getElementById('connection_status').innerHTML = 'Connection Status: Connected as host using ' + realTimeClient;
+                        //document.getElementById('create_meeting_point').style.display = 'block';
+
+                        create();
+                        break;
+                    case 'loggedasotheruser':
+                        // force connection, kick other logged users
+                        getToken(UID_USER, function(token) {
+                            rtcc.setToken(token);
+                            rtcc.authenticate(1);
+                        });
+                        break;
+                    case 'disconnectedRtccDriver':
+                        getToken(UID_USER, function(token) {
+                            rtcc.setToken(token);
+                        });
+                        break;
+                }
+            };
+
+            /* ******************************************************************************** */
+            /*                                                                                  */
+            /*  OnConfCallHandler:                                                              */
+            /*                                                                                  */
+            /*       This function is called on any event related to  meeting points            */
+            /*       Here, this function is called when the Meeting Point has been created      */
+            /*       It return the js object of class MeetingPointHost to interact with.        */
+            /*                                                                                  */
+            /*       The meeting Point is immediately set to autoaccept mode                   */
+            /*                                                                                  */
+            /*       Once meeting point created, the Meeting point ID is displayed              */
+            /*       and host button unlocked                                                   */
+            /* ******************************************************************************** */
+
+            rtcc.onConfCallHandler = function(action, obj) {
+
+                if (action === "meetingPointCreated") {
+
+                    obj.autoaccept_mode();
+                    //document.getElementById("meeting_point_id_display").value = obj.id;
+                    //document.getElementById('host_meeting_point').style.display = 'block';
+                    host();
+
+                    var callOneOneUrl = "/rest/weemo/callOneOne/" + getQueryVariable('uuid_to_call') + "/" + obj.id;
+
+                    $.ajax(callOneOneUrl)
+                        .done(function() {
+
+                        })
+                        .fail(function() {});
+                }
+            };
+
+            rtcc.on('error', function(errorMessage) {
+                console.log("Unknown error: " + errorMessage);
+            });
+
+            this.rtcc.on('client.disconnect', function() {
+                if (weemoExtension.rtcc.getConnectionMode() === "plugin" || weemoExtension.rtcc.getConnectionMode() === "webrtc") {
+                    var finishOneOneUrl = "/rest/weemo/finishOneOne/" + getQueryVariable('uuid_to_call');
+
+                    $.ajax(finishOneOneUrl)
+                        .done(function() {
+
+                        })
+                        .fail(function() {});
+                }
+            });
+
+            //Initialize connection between the real-time client and the browser
+            rtcc.initialize();
+        },
+        getToken = function(uid, callback) {
+            var xhr;
+            if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari
+                xhr = new XMLHttpRequest();
+            } else { // code for IE6, IE5
+                xhr = new ActiveXObject('Microsoft.XMLHTTP');
+            }
+            xhr.onreadystatechange = function() {
+                var response = xhr.responseText,
+                    responseJson,
+                    token;
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    response = xhr.responseText;
+                    try {
+                        responseJson = JSON.parse(response);
+
+                    } catch (e) {
+                        document.getElementById('error-content').innerHTML = e.message + '<br />' + e.stack + '<br />Response: ' + response;
+                        document.getElementById('error').style.display = 'block';
+                    }
+                    if (responseJson.error) {
+                        document.getElementById('error-content').innerHTML = 'error code:' + responseJson.error + '<br />Description:' + responseJson.error_description;
+                        document.getElementById('error').style.display = 'block';
+                    } else {
+                        token = responseJson.token;
+                        if (typeof callback === "function") {
+                            callback(token)
+                        } else {
+                            initializeRtcc(token);
+                        }
+                    }
+                } else if (xhr.readyState === 4 && xhr.status !== 200) {
+                    response = xhr.responseText;
+                    console.log(response);
+                    document.getElementById('error-content').innerHTML = response;
+                    document.getElementById('error').style.display = 'block';
+                }
+            };
+            xhr.open('GET', AUTH_URL, true);
+            xhr.send();
+        },
+        init = function() {
+            getToken(UID_USER);
+        },
+
+        /* ******************************************************************************** */
+        /*                                                                                  */
+        /*  create (Step 1):                                                                */
+        /*  In the create function, the host creates a meeting point                        */
+        /*  With location, start and stop date                                              */
+        /*  This function is called when the button "Create Meeting Point" is pushed        */
+        /*                                                                                  */
+        /* ******************************************************************************** */
+
+        create = function() {
+            var options = {
+                location: "on the cloud",
+                startDate: Math.round(new Date().valueOf() / 1000) + 100,
+                stopDate: Math.round(new Date().valueOf() / 1000) + 200,
+            };
+            meetingPoint = rtcc.createMeetingPoint('scheduled', options);
+        },
+        /* ******************************************************************************** */
+        /*                                                                                  */
+        /*  host (Step 1):                                                                  */
+        /*  In the host function, the host hosts the conference identified in the           */
+        /*  meetingPoint object (object created as return of the createMeetingPoint())      */
+        /*  This function is called when the button "Host Meeting Point" is pushed          */
+        /*                                                                                  */
+        /* ******************************************************************************** */
+        host = function() {
+            if (meetingPoint) {
+                meetingPoint.host();
+            } else {
+                alert("create meeting point first")
+            }
+        }
+
+    init();
+    </script>
+    <div class="container">
+        <div class="starter-template">
+            <h1 id="callWho">Calling</h1>
+            <h4 id="stat"></h4>
+            <div class="row well">
+                <div id="error" style="display:none;" class="bg-danger">
+                    <h4>An error occurred:</h4>
+                    <div id="error-content">This is the error</div>
+                </div>
+                <div class="center-block" style="float:none;width:500px">
+                    <!-- <h4 id="connection_status">Connection Status: Connecting as Host...</h4> -->
+                </div>
+            </div>
+            <div class="row well" id="create_meeting_point" style="display:none;">
+                <div class="center-block" style="float:none;width:500px">
+                    <h4> To create a multi-pary call,  create a meetingPoint.</h4>
+                    <br/>
+                    <button class="center-block  btn btn-primary btn-lg" onclick="create()">Create Meeting Point</button>
+                </div>
+            </div>
+            <div class="row well" id="host_meeting_point" style="display:none;">
+                <div class="center-block" style="float:none;width:500px">
+                    <h4>  Now that you have created a meeting point, click host</h4>
+                    <button class="center-block btn btn-primary btn-lg" onclick="host()">Host Meeting Point</button>
+                    <h4>To Join the conference, attendees need the meeting point id (copy and paste the number to the attendee side)</h4>
+                    <input class="center-block" style="width:230px" id="meeting_point_id_display" type="text" />
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
