@@ -18,6 +18,7 @@ package org.exoplatform.services.videocall;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.CommonsUtils;
+import org.exoplatform.model.videocall.MessageInfo;
 import org.exoplatform.model.videocall.VideoCallModel;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.cache.CacheService;
@@ -46,10 +47,13 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class VideoCallService {
   private static ExoCache<Serializable, VideoCallModel> videoProfileCache;
+  private static CopyOnWriteArrayList<MessageInfo> videoMessageList = new CopyOnWriteArrayList<MessageInfo>();
+  private static long CALL_TIME_OUT = 15000; // 15 seconds
   private static Hashtable<String, String> oneoneCache = new Hashtable<String, String>();
 
   public static String VIDEO_PROFILE_KEY = "videoCallsProfile" + CommonsUtils.getRepository().getConfiguration().getName();
@@ -543,5 +547,24 @@ public class VideoCallService {
       return StringUtils.EMPTY;
     }
     return oneoneCache.get(toUser);
+  }
+
+  public static void storeMessage(MessageInfo messageInfo) {
+    if (!videoMessageList.contains(messageInfo)) {
+      videoMessageList.add(messageInfo);
+    } else if (!isBusy(messageInfo.getFromUser())){
+      videoMessageList.remove(messageInfo);
+      videoMessageList.add(messageInfo);
+    }
+  }
+
+  public static boolean isBusy(String userId) {
+    for (MessageInfo messageInfo : videoMessageList) {
+      boolean isBusy = (messageInfo.getFromUser().equals(userId)
+              || messageInfo.getToUser().equals(userId))
+              && (messageInfo.getCreatedTime() + CALL_TIME_OUT) > System.currentTimeMillis();
+      if (isBusy) return isBusy;
+    }
+    return false;
   }
 }

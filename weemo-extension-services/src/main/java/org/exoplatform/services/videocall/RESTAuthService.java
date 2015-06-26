@@ -137,19 +137,19 @@ public class  RESTAuthService implements ResourceContainer{
 //  }
 
   @GET
-  @Path("/sendMessage/{callee}/{messageType}")
+  @Path("/sendMessage/{callee}/{messageType}/{callMode}")
   @RolesAllowed("users")
-  public Response sendMessage(@PathParam("callee") String callee, @PathParam("messageType") String messageType) throws Exception {
+  public Response sendMessage(@PathParam("callee") String callee, @PathParam("messageType") String messageType,
+                              @PathParam("callMode") String callMode) throws Exception {
     CacheControl cacheControl = new CacheControl();
     cacheControl.setNoCache(true);
 
-    MessageInfo messageInfo = new MessageInfo();
-    messageInfo.setType(messageType);
-    messageInfo.setFromUser(ConversationState
-            .getCurrent().getIdentity().getUserId());
-    messageInfo.setToUser(callee);
+    MessageInfo messageInfo = new MessageInfo(messageType, ConversationState
+            .getCurrent().getIdentity().getUserId(), callee, "one");
+
 
     WebNotificationSender.sendJsonMessage(callee, messageInfo);
+    VideoCallService.storeMessage(messageInfo);
     return Response.ok().cacheControl(cacheControl).build();
   }
 }
