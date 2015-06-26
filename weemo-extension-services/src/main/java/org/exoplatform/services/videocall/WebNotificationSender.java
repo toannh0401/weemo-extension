@@ -1,6 +1,6 @@
 package org.exoplatform.services.videocall;
 
-import org.exoplatform.commons.api.notification.model.MessageInfo;
+import org.exoplatform.model.videocall.MessageInfo;
 import org.exoplatform.commons.utils.CommonsUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;

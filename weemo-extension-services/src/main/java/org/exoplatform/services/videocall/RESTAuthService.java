@@ -17,7 +17,7 @@
 package org.exoplatform.services.videocall;
 
 
-import org.exoplatform.commons.api.notification.model.MessageInfo;
+import org.exoplatform.model.videocall.MessageInfo;
 import org.exoplatform.services.rest.resource.ResourceContainer;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.utils.videocall.PropertyManager;
@@ -76,63 +76,80 @@ public class  RESTAuthService implements ResourceContainer{
     return Response.ok(String.valueOf(hasOneOneCallPermission)).build();
   }
 
+//  @GET
+//  @Path("/callOneOne/{toUser}/{meetingId}")
+//  @RolesAllowed("users")
+//  public Response callOneOne(@PathParam("toUser") String toUser, @PathParam("meetingId") String meetingId) throws Exception {
+//    CacheControl cacheControl = new CacheControl();
+//    cacheControl.setNoCache(true);
+//
+//    boolean canCall = VideoCallService.callOneOne(toUser, meetingId);
+//    WebNotificationSender.sendJsonMessage(toUser, new MessageInfo().setId(meetingId).from(ConversationState
+//            .getCurrent().getIdentity().getUserId()));
+//    return Response.ok(canCall).cacheControl(cacheControl).build();
+//  }
+//
+//  @GET
+//  @Path("/call11/{callee}")
+//  @RolesAllowed("users")
+//  public Response call11(@PathParam("callee") String callee) throws Exception {
+//    CacheControl cacheControl = new CacheControl();
+//    cacheControl.setNoCache(true);
+//
+//
+//    WebNotificationSender.sendJsonMessage(callee, new MessageInfo().setId("Popup").from(ConversationState
+//            .getCurrent().getIdentity().getUserId()));
+//    return Response.ok().cacheControl(cacheControl).build();
+//  }
+//
+//  @GET
+//  @Path("/call11Ready/{caller}")
+//  @RolesAllowed("users")
+//  public Response call11Ready(@PathParam("caller") String caller) throws Exception {
+//    CacheControl cacheControl = new CacheControl();
+//    cacheControl.setNoCache(true);
+//
+//
+//    WebNotificationSender.sendJsonMessage(caller, new MessageInfo().setId("Ready").to(caller));
+//    return Response.ok().cacheControl(cacheControl).build();
+//  }
+//
+//  @GET
+//  @Path("/finishOneOne/{toUser}")
+//  @RolesAllowed("users")
+//  public Response finishOneOne(@PathParam("toUser") String toUser) throws Exception {
+//    CacheControl cacheControl = new CacheControl();
+//    cacheControl.setNoCache(true);
+//
+//    VideoCallService.finishCall(toUser);
+//    return Response.ok().cacheControl(cacheControl).build();
+//  }
+//
+//  @GET
+//  @Path("/getMeetingId/{toUser}")
+//  @RolesAllowed("users")
+//  public Response getMeetingId(@PathParam("toUser") String toUser) throws Exception {
+//    CacheControl cacheControl = new CacheControl();
+//    cacheControl.setNoCache(true);
+//
+//    String meetingId = VideoCallService.getMeetingId(toUser);
+//    return Response.ok(meetingId).cacheControl(cacheControl).build();
+//  }
+
   @GET
-  @Path("/callOneOne/{toUser}/{meetingId}")
+  @Path("/sendMessage/{callee}/{messageType}")
   @RolesAllowed("users")
-  public Response callOneOne(@PathParam("toUser") String toUser, @PathParam("meetingId") String meetingId) throws Exception {
+  public Response sendMessage(@PathParam("callee") String callee, @PathParam("messageType") String messageType) throws Exception {
     CacheControl cacheControl = new CacheControl();
     cacheControl.setNoCache(true);
 
-    boolean canCall = VideoCallService.callOneOne(toUser, meetingId);
-    WebNotificationSender.sendJsonMessage(toUser, new MessageInfo().setId(meetingId).from(ConversationState
-            .getCurrent().getIdentity().getUserId()));
-    return Response.ok(canCall).cacheControl(cacheControl).build();
-  }
+    MessageInfo messageInfo = new MessageInfo();
+    messageInfo.setType(messageType);
+    messageInfo.setFromUser(ConversationState
+            .getCurrent().getIdentity().getUserId());
+    messageInfo.setToUser(callee);
 
-  @GET
-  @Path("/call11/{callee}")
-  @RolesAllowed("users")
-  public Response call11(@PathParam("callee") String callee) throws Exception {
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setNoCache(true);
-
-
-    WebNotificationSender.sendJsonMessage(callee, new MessageInfo().setId("Popup").from(ConversationState
-            .getCurrent().getIdentity().getUserId()));
+    WebNotificationSender.sendJsonMessage(callee, messageInfo);
     return Response.ok().cacheControl(cacheControl).build();
-  }
-
-  @GET
-  @Path("/call11Ready/{caller}")
-  @RolesAllowed("users")
-  public Response call11Ready(@PathParam("caller") String caller) throws Exception {
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setNoCache(true);
-
-
-    WebNotificationSender.sendJsonMessage(caller, new MessageInfo().setId("Ready").to(caller));
-    return Response.ok().cacheControl(cacheControl).build();
-  }
-
-  @GET
-  @Path("/finishOneOne/{toUser}")
-  @RolesAllowed("users")
-  public Response finishOneOne(@PathParam("toUser") String toUser) throws Exception {
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setNoCache(true);
-
-    VideoCallService.finishCall(toUser);
-    return Response.ok().cacheControl(cacheControl).build();
-  }
-
-  @GET
-  @Path("/getMeetingId/{toUser}")
-  @RolesAllowed("users")
-  public Response getMeetingId(@PathParam("toUser") String toUser) throws Exception {
-    CacheControl cacheControl = new CacheControl();
-    cacheControl.setNoCache(true);
-
-    String meetingId = VideoCallService.getMeetingId(toUser);
-    return Response.ok(meetingId).cacheControl(cacheControl).build();
   }
 }

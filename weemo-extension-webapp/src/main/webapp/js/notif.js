@@ -40,13 +40,13 @@ function WeemoExtension() {
                 mode_parameter: 'plugin_webrtc',
                 uiVersion: '1.4.4'
             };
-            this.rtcc = new Rtcc('', '', 'internal', options);
+            //this.rtcc = new Rtcc('', '', 'internal', options);
         } else {
             var options = {
                 mode_parameter: 'plugin_webrtc',
                 uiVersion: '1.4.4'
             };
-            this.rtcc = new Rtcc('', '', 'internal', options);
+            //this.rtcc = new Rtcc('', '', 'internal', options);
         }
 
     } catch (err) {
