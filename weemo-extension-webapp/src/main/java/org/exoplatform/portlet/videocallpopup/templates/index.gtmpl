@@ -7,6 +7,7 @@
      cometd-context-name="<%=cometdContextName%>"
      data-call-mode="<%=mode%>"
      data-callee="<%=callee%>"
+     data-caller="<%=caller%>"
      style="display: none;">
 </div>
 
@@ -16,3 +17,13 @@
     <a id="sightcall-alert-download" href="javascript:void(0);"><strong>&{exoplatform.videocall.installer.download}</strong></a> |
     <a id="sightcall-alert-dismiss" href="javascript:void(0);">&{exoplatform.videocall.installer.dismiss}</a>
 </div>
+<% if (mode.equals("one")) {%>
+<img/>
+<div id="sightCallConnectionStatus">Calling <%=callee%></div>
+<a id="sightCallCallButton">Call</a>|<a id="sightCallCloseButton">Close</a>
+<% } %>
+
+<% if (mode.equals("one_callee")) {%>
+<div id="sightCallConnectionStatus">connecting...</div>
+
+<% } %>

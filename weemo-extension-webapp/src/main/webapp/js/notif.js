@@ -40,13 +40,13 @@ function WeemoExtension() {
                 mode_parameter: 'plugin_webrtc',
                 uiVersion: '1.4.4'
             };
-            //this.rtcc = new Rtcc('', '', 'internal', options);
+            this.rtcc = new Rtcc('', '', 'internal', options);
         } else {
             var options = {
                 mode_parameter: 'plugin_webrtc',
                 uiVersion: '1.4.4'
             };
-            //this.rtcc = new Rtcc('', '', 'internal', options);
+            this.rtcc = new Rtcc('', '', 'internal', options);
         }
 
     } catch (err) {
@@ -130,7 +130,6 @@ WeemoExtension.prototype.getCookie = function(cname) {
     }
     return "";
 }
-
 WeemoExtension.prototype.showWeemoInstaller = function() {
     if (!weemoExtension.isSupport || weemoExtension.connectedWeemoDriver || weemoExtension.isTurnOff === "true") {
         jqchat("#weemo-alert").hide();
@@ -632,15 +631,9 @@ WeemoExtension.prototype.attachWeemoToPopups = function() {
                 } else {
                     //weemoExtension.createWeemoCall(targetUser.trim(), targetFullname.trim());
                     //alert('xxx');
-                    weemoExtension.caller = window.open('/weemo-extension/calloneone/caller.html?callee=' + targetUser.trim() + '&callee_display_name=' + targetFullname.trim(), "MyWindow", "top=100, left=100,toolbar=no, menubar=no,scrollbars=no,resizable=no,location=no,directories=no,status=no, height=300, width=500");
+                    window.open('/portal/intranet/videocallpopup?callee=' + targetUser.trim() + '&mode=one', "MyWindow", "top=100, left=100,toolbar=no, menubar=no,scrollbars=no,resizable=no,location=no,directories=no,status=no, height=300, width=500");
 
-                    var callOneOneUrl = "/rest/weemo/call11/" + targetUser.trim();
 
-                    jqchat.ajax(callOneOneUrl)
-                      .done(function() {
-
-                      })
-                      .fail(function() {});
                 }
             } else if (!jqchat(this).hasClass("disabled")) {
                 if (weemoExtension.isValidWeemoKey == false || weemoExtension.tokenKey.length == 0) {
@@ -927,7 +920,7 @@ var weemoExtension = new WeemoExtension();
         weemoExtension.attachWeemoToProfile();
         //weemoExtension.checkCallOneOne();
         window.require(["SHARED/SightCallNotification"], function(sightCallNotification) {
-            sightCallNotification.initCometd(weemoExtension.username, weemoExtension.cometdUserToken, weemoExtension.cometdContextName);
+            SightCallNotification.initCometd(weemoExtension.username, weemoExtension.cometdUserToken, weemoExtension.cometdContextName);
         });
     });
 

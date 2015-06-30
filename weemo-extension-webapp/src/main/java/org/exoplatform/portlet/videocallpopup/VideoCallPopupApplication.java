@@ -68,6 +68,7 @@ public class VideoCallPopupApplication {
     // Process parameters
     String callMode = getParam("mode");
     String callee = getParam("callee");
+    String caller = getParam("caller");
 
 
     VideoCallModel videoCallModel = videoCallService_.getVideoCallProfile();
@@ -112,6 +113,7 @@ public class VideoCallPopupApplication {
     return index.with().set("user", remoteUser_)
             .set("mode", callMode)
             .set("callee", callee)
+            .set("caller", caller)
             .set("weemoKey", weemoKey)
             .set("tokenKey", tokenKey)
             .set("videoCallVersion", videoCallVersion)
