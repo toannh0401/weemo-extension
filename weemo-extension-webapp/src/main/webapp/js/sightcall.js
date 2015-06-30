@@ -269,11 +269,6 @@ SightCallExtension.prototype.initCall = function($uid, $name) {
 
                     });
                 }
-
-                // Update state
-                gj("#sightCallConnectionStatus").text("disconnected");
-                //gj("#sightCallCallButton")
-
             }
         });
 

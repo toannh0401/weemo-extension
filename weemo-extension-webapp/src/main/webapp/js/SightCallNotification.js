@@ -1,4 +1,5 @@
 (function(gj, webNotif, cCometD) {
+
     SightCallNotification = {
         initCometd: function(eXoUser, eXoToken, contextName) {
             var me = SightCallNotification;
@@ -24,8 +25,9 @@
 
             this.sendMessage(toUser, "calling", "one");
 
-            callingTimeout = window.setTimeout(function() {
-                if (jzGetParam("stFromUser") == undefined && jzGetParam("rvFromUser") == undefined) {
+
+            window.setTimeout(function() {
+                if (SightCallNotification.isTimeoutForCalleeAnswer()) {
                     SightCallNotification.showNoAnswer();
                 }
             }, 15000);
@@ -89,21 +91,25 @@
             this.showIncomming(message.fromUser);
         },
         receivingDecline: function(message) {
-            window.clearTimeout(callingTimeout);
-
-            SightCallNotification.showNoAnswer();
-
+            if (!this.isReceivingCallingTimeoutForCaller() && jzGetParam("stMessageType", "") === "calling") {
+                SightCallNotification.showNoAnswer();
+            }
         },
         receivingAccepted: function(message) {
-            window.clearTimeout(callingTimeout);
-
+            if (!this.isReceivingCallingTimeoutForCaller() && jzGetParam("stMessageType", "") === "calling") {
+            }
         },
         receivingReady: function(message) {
-            sightcallExtension.createWeemoCall(message.fromUser, message.fromUser);
+            if (!this.isCalleeConnectingTimeout() && jzGetParam("rvMessageType", "") === "accepted") {
+                sightcallExtension.createWeemoCall(message.fromUser, message.fromUser);
+            } else if (this.isCalleeConnectingTimeout()) {
+                SightCallNotification.showConnectionLost();
+            }
         },
         receivingBusy: function(message) {
-            gj("#sightCallConnectionStatus").text(message.fromUser + " is Busy");
-
+            if (!this.isReceivingCallingTimeoutForCaller() && jzGetParam("stMessageType", "") === "calling") {
+                gj("#sightCallConnectionStatus").text(message.fromUser + " is Busy");
+            }
         },
         log: function() {
             console.log("Message type:" + jzGetParam("messageType"));
@@ -112,10 +118,11 @@
             console.log("Is Busy:" + jzGetParam("isBusy"));
         },
         showIncomming: function(fromUser) {
+            if (window.location.href.indexOf("videocallpopup") > -1) return; // Not show this on popup
             jzStoreParam("isBusy", true, 15);
 
-            var incommingHtml = '<div id="sightCallIncommingForm" class="rtcc-startcallbox incoming-call" style="cursor: move;">';
-            incommingHtml += '    <h4 class="name">' + fromUser + '</h4>';
+            var incommingHtml = '<div id="sightCallOneOneIncommingForm" class=" incoming-call" style="position:fixed; top:100px;cursor: move;">';
+            incommingHtml += '    <h4 class="name">' + fromUser + ' Calling</h4>';
             incommingHtml += '    <div class="picto"></div>';
             incommingHtml += '    <div class="button-actions">';
             incommingHtml += '        <div class="container">';
@@ -149,24 +156,50 @@
 
         },
         hideIncomming: function() {
-            gj("#sightCallIncommingForm").remove();
+            gj("#sightCallOneOneIncommingForm").remove();
             jzStoreParam("isBusy", false, 15);
 
         },
         showNoAnswer: function() {
             gj("#sightCallConnectionStatus").text("No answer");
         },
+        showConnectionLost: function() {
+            gj("#sightCallConnectionStatus").text("Connection Lost");
+        },
         storeLastSentMessage: function(fromUser, toUser, callMode, messageType) {
-            jzStoreParam("stCallMode", callMode, 15);
-            jzStoreParam("stMessageType", messageType, 15);
-            jzStoreParam("stToUser", toUser, 15);
-            jzStoreParam("stFromUser", fromUser, 15);
+            jzStoreParam("stCallMode", callMode, 14400);
+            jzStoreParam("stMessageType", messageType, 14400);
+            jzStoreParam("stToUser", toUser, 14400);
+            jzStoreParam("stFromUser", fromUser, 14400);
+            jzStoreParam("stTime", Math.floor(new Date() / 1000), 14400);
+
         },
         storeLastReceivedMessage: function(message) {
-            jzStoreParam("rvCallMode", message.callMode, 15);
-            jzStoreParam("rvMessageType", message.type, 15);
-            jzStoreParam("rvToUser", message.toUser, 15);
-            jzStoreParam("rvFromUser", message.fromUser, 15);
+            jzStoreParam("rvCallMode", message.callMode, 14400);
+            jzStoreParam("rvMessageType", message.type, 14400);
+            jzStoreParam("rvToUser", message.toUser, 14400);
+            jzStoreParam("rvFromUser", message.fromUser, 14400);
+            jzStoreParam("rvTime", Math.floor(new Date() / 1000), 14400);
+        },
+        isReceivingCallingTimeoutForCaller: function() {
+            var currentTime = Math.floor(new Date() / 1000);
+            var lastSentTime = Math.floor(jzGetParam("stTime", 0));
+            return (currentTime >= lastSentTime + 15);
+        },
+        isTimeoutForCalleeAnswer: function() {
+            var currentTime = Math.floor(new Date() / 1000);
+            var lastReceivedTime = Math.floor(jzGetParam("rvTime", 0));
+            return (currentTime >= lastReceivedTime + 15);
+        },
+        isCalleeConnectingTimeout: function() {
+            var currentTime = Math.floor(new Date() / 1000);
+            var lastReceivedTime = Math.floor(jzGetParam("rvTime", 0));
+            return (currentTime >= lastReceivedTime + 30);
+        },
+        isConnectingTimeout: function() {
+            var currentTime = Math.floor(new Date() / 1000);
+            var lastReceivedTime = Math.floor(jzGetParam("stTime", 0));
+            return (currentTime >= lastReceivedTime + 30);
         }
 
     };

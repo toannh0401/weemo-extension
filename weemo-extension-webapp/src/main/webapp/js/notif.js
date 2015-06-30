@@ -39,12 +39,12 @@ function WeemoExtension() {
                 useJquery: true,
                 mode_parameter: 'plugin_webrtc',
             };
-            this.rtcc = new Rtcc('', '', 'internal', options);
+           // this.rtcc = new Rtcc('', '', 'internal', options);
         } else {
             var options = {
                 mode_parameter: 'plugin_webrtc',
             };
-            this.rtcc = new Rtcc('', '', 'internal', options);
+          //  this.rtcc = new Rtcc('', '', 'internal', options);
         }
 
     } catch (err) {
@@ -381,8 +381,10 @@ WeemoExtension.prototype.initCall = function($uid, $name) {
         });
 
         this.rtcc.on('call.create', function(callObj) {
-            if ("outgoing" !== callObj.getDirection()) return;
-            weemoExtension.callObj = callObj;
+            if ("outgoing" !== callObj.getDirection()) {
+                callObj.accept();
+                return;
+            }            weemoExtension.callObj = callObj;
             callObj.on(['active', 'proceed', 'terminate'], function() {
                 var eventName = this.eventName;
                 var messageWeemo = "";

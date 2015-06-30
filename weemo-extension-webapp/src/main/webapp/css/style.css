@@ -150,3 +150,11 @@
 	height: 180px;
 	background: blue;
 }
+
+#sightCallIncommingForm {
+	display:none;
+}
+
+.rtcc-startcallbox {
+	display: none;
+}
