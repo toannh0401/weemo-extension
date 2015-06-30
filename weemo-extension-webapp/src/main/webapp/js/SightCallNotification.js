@@ -65,6 +65,10 @@
                 });
 
         },
+        sendClosing: function(toUser) {
+            this.sendMessage(toUser, "closed", "one");
+            window.localStorage.clear();
+        },
         receivingMessage: function(message) {
 
             if (jzGetParam("isBusy") === "true" && message.fromUser !== jzGetParam("rvFromUser") && jzGetParam("rvFromUser") !== undefined) {
@@ -81,6 +85,8 @@
                 this.receivingReady(message);
             } else if (message.type === "accepted") {
                 this.receivingAccepted(message);
+            } else if (message.type === "closed"){
+                this.receivingClosing();
             }
 
             this.storeLastReceivedMessage(message);
@@ -110,6 +116,10 @@
             if (!this.isReceivingCallingTimeoutForCaller() && jzGetParam("stMessageType", "") === "calling") {
                 gj("#sightCallConnectionStatus").text(message.fromUser + " is Busy");
             }
+        },
+        receivingClosing: function() {
+            this.hideIncomming();
+            window.localStorage.clear();
         },
         log: function() {
             console.log("Message type:" + jzGetParam("messageType"));

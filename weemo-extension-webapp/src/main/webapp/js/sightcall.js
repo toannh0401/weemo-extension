@@ -528,6 +528,13 @@ SightCallExtension.prototype.initPopup = function() {
     jqchat("#PlatformAdminToolbarContainer").css("display", "none");
 };
 
+SightCallExtension.prototype.bindButtonEvent = function($) {
+    $( "#sightCallCloseButton" ).bind( "click", function() {
+        console.log("closing...");
+        SightCallNotification.sendClosing(jzGetParam("stToUser"));
+        window.close();
+    });
+};
 
 
 /**
@@ -595,6 +602,7 @@ var sightcallExtension = new SightCallExtension();
         var username = $sightcallApplication.attr("data-username");
         sightcallExtension.initCall(username, username);
 
+        sightcallExtension.bindButtonEvent($);
     });
 
 })(jqchat);
