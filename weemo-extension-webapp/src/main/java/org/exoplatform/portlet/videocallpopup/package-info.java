@@ -19,7 +19,9 @@
             @Script(value = "js/sightcall.js", id = "sightcall", depends = {"jquery", "juzu-utils"})
         }
 )
-
+@Stylesheets({
+        @Stylesheet(value = "css/style.css", location = AssetLocation.SERVER)
+})
 
 @Assets("*")
 

@@ -35,13 +35,14 @@ function SightCallExtension() {
             var options = {
                 useJquery: true,
                 mode_parameter: 'plugin_webrtc',
-                uiVersion: '1.4.4'
+                container: 'video-container'
+
             };
             this.rtcc = new Rtcc('', '', 'internal', options);
         } else {
             var options = {
                 mode_parameter: 'plugin_webrtc',
-                uiVersion: '1.4.4'
+                container: 'video-container'
             };
             this.rtcc = new Rtcc('', '', 'internal', options);
         }
@@ -239,10 +240,6 @@ SightCallExtension.prototype.initCall = function($uid, $name) {
                     });
                 }
             }
-        });
-
-        this.rtcc.on('cloud.authenticate.success', function() {
-            sightcallExtension.rtcc.setPluginMode('standalone');
         });
 
         this.rtcc.on('client.disconnect', function() {

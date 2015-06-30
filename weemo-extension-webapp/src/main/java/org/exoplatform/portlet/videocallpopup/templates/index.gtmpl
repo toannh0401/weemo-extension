@@ -27,3 +27,4 @@
 <div id="sightCallConnectionStatus">connecting...</div>
 
 <% } %>
+<div id="video-container"></div>
